@@ -189,22 +189,7 @@ const supabaseClient = window.supabase.createClient(
 
     const { data, error } = await supabaseClient
       .from('teams')
-      .select(`
-        id,
-        name,
-        captain,
-        vice_captain,
-        logo_url,
-        villages (
-          name
-        ),
-        players (
-          id,
-          name,
-          role,
-          photo_url
-        )
-      `)
+      .select('*')
       .order('name');
 
     if (error) {
