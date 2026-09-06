@@ -7,12 +7,12 @@ const supabaseClient = window.supabase.createClient(
 );
 supabaseClient
   .from('teams')
-  .select('name')
+  .select('*')
   .then(function(result) {
     if (result.error) {
-      alert("❌ Supabase error: " + result.error.message);
+      alert("❌ Error: " + result.error.message);
     } else {
-      alert("✅ Supabase connected! Teams found: " + result.data.length);
+      alert("Teams returned: " + result.data.length + "\n\n" + JSON.stringify(result.data));
     }
   });
 /* ==========================================================================
