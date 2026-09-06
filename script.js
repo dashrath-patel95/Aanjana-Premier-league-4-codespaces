@@ -5,16 +5,7 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
-supabaseClient
-  .from('teams')
-  .select('*')
-  .then(function(result) {
-    if (result.error) {
-      alert("❌ Error: " + result.error.message);
-    } else {
-      alert("Teams returned: " + result.data.length + "\n\n" + JSON.stringify(result.data));
-    }
-  });
+
 /* ==========================================================================
    APL 4 — script.js
    Supabase-connected version
