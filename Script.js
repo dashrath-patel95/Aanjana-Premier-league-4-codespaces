@@ -1,4 +1,10 @@
+const SUPABASE_URL = "https://yoeavwbeovdhyuqegygp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QUNmCQVaTy1LgKRAb7Yl4A_w01zc0S0";
 
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 /* ==========================================================================
    APL 4 — script.js
    Vanilla JS only. Organized into: data (edit these arrays to update the
