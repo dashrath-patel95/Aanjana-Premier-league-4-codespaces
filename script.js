@@ -6,19 +6,14 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-/* ==========================================================================
-   APL 4 — script.js
-   Supabase-connected version
-   ========================================================================== */
-
 (function () {
   'use strict';
 
-  /* ------------------------------------------------------------------
-     1. DATA
-     ------------------------------------------------------------------ */
-
   let TEAMS = [];
+
+  /* =========================
+     DEMO MATCH DATA
+  ========================= */
 
   const MATCHES = [
     {
@@ -51,133 +46,183 @@ const supabaseClient = window.supabase.createClient(
   ];
 
   const LIVE_SCORE_DEMO = {
-    teamA: {
-      name: 'Team A',
-      score: '142/6',
-      overs: '18.4 overs'
-    },
-    teamB: {
-      name: 'Team B',
-      score: 'Yet to bat',
-      overs: ''
-    },
-    status: 'Sample layout only — no live match is in progress.'
+    teamA: 'APL Team A',
+    teamB: 'APL Team B',
+    runsA: 126,
+    wicketsA: 4,
+    oversA: '15.2',
+    runsB: 0,
+    wicketsB: 0,
+    oversB: '0.0',
+    status: 'Match starts soon'
   };
 
   const GALLERY = [
-    {
-      src: 'assets/images/gallery/photo-01.jpg',
-      alt: 'APL match action',
-      caption: 'Match action, previous edition'
-    },
-    {
-      src: 'assets/images/gallery/photo-02.jpg',
-      alt: 'APL winning team',
-      caption: 'Trophy lift, previous edition'
-    },
-    {
-      src: 'assets/images/gallery/photo-03.jpg',
-      alt: 'APL crowd',
-      caption: 'Crowd at Matraji Pal ground'
-    },
-    {
-      src: 'assets/images/gallery/photo-04.jpg',
-      alt: 'APL opening ceremony',
-      caption: 'Opening ceremony'
-    },
-    {
-      src: 'assets/images/gallery/photo-05.jpg',
-      alt: 'APL players',
-      caption: 'Players warming up'
-    },
-    {
-      src: 'assets/images/gallery/photo-06.jpg',
-      alt: 'APL village community',
-      caption: 'Community gathering'
-    }
+    'assets/gallery-1.jpg',
+    'assets/gallery-2.jpg',
+    'assets/gallery-3.jpg',
+    'assets/gallery-4.jpg',
+    'assets/gallery-5.jpg',
+    'assets/gallery-6.jpg'
   ];
 
   const HISTORY = [
     {
-      edition: 'APL 1',
-      year: '2023',
-      winner: 'Winner TBA',
-      runnerUp: 'Runner-up TBA',
-      result: 'Final result TBA',
-      captain: 'Winning captain TBA'
+      year: 'APL 1',
+      winner: 'Coming Soon',
+      runner: 'Coming Soon'
     },
     {
-      edition: 'APL 2',
-      year: '2024',
-      winner: 'Winner TBA',
-      runnerUp: 'Runner-up TBA',
-      result: 'Final result TBA',
-      captain: 'Winning captain TBA'
+      year: 'APL 2',
+      winner: 'Coming Soon',
+      runner: 'Coming Soon'
     },
     {
-      edition: 'APL 3',
-      year: '2025',
-      winner: 'Winner TBA',
-      runnerUp: 'Runner-up TBA',
-      result: 'Final result TBA',
-      captain: 'Winning captain TBA'
+      year: 'APL 3',
+      winner: 'Coming Soon',
+      runner: 'Coming Soon'
+    },
+    {
+      year: 'APL 4',
+      winner: '2026 • Tournament Ahead',
+      runner: 'To Be Decided'
     }
   ];
 
   const VILLAGES = [
-    {
-      name: 'Village TBA',
-      teams: 2,
-      photo: '',
-      description: 'Short description of the village.'
-    },
-    {
-      name: 'Village TBA',
-      teams: 1,
-      photo: '',
-      description: 'Short description of the village.'
-    },
-    {
-      name: 'Village TBA',
-      teams: 2,
-      photo: '',
-      description: 'Short description of the village.'
-    },
-    {
-      name: 'Village TBA',
-      teams: 1,
-      photo: '',
-      description: 'Short description of the village.'
-    },
-    {
-      name: 'Village TBA',
-      teams: 1,
-      photo: '',
-      description: 'Short description of the village.'
-    }
+    'Aaldi',
+    'Gajipura',
+    'Savidhar',
+    'Datlawas',
+    'Pawli',
+    'Chitrodi',
+    'Goluya',
+    'Manoharji Ka Was / Rajikawas',
+    'Khanpur',
+    'Kodi',
+    'Karloo'
   ];
 
-  /* ------------------------------------------------------------------
-     2. HELPERS
-     ------------------------------------------------------------------ */
+  /* =========================
+     HELPERS
+  ========================= */
 
   function initials(name) {
     if (!name) return 'APL';
 
     return name
-      .split(' ')
-      .filter(Boolean)
-      .map(function (w) {
-        return w[0];
-      })
+      .trim()
+      .split(/\s+/)
       .slice(0, 2)
-      .join('')
-      .toUpperCase();
+      .map(function (word) {
+        return word.charAt(0).toUpperCase();
+      })
+      .join('');
   }
 
-  /* ------------------------------------------------------------------
-     3. TEAMS — LOAD FROM SUPABASE
-     ------------------------------------------------------------------ */
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  /* =========================
+     NAVIGATION
+  ========================= */
+
+  function initNav() {
+    const menuButton = document.querySelector(
+      '.menu-toggle, .nav-toggle, [data-menu-toggle]'
+    );
+
+    const nav = document.querySelector(
+      '.nav-links, .navigation, nav ul'
+    );
+
+    if (!menuButton || !nav) return;
+
+    menuButton.addEventListener('click', function () {
+      nav.classList.toggle('active');
+      menuButton.classList.toggle('active');
+    });
+
+    nav.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        nav.classList.remove('active');
+        menuButton.classList.remove('active');
+      });
+    });
+  }
+
+  /* =========================
+     COUNTDOWN
+  ========================= */
+
+  function initCountdown() {
+    const countdown =
+      document.getElementById('countdown') ||
+      document.querySelector('[data-countdown]');
+
+    if (!countdown) return;
+
+    const target = new Date('2026-11-14T07:00:00+05:30').getTime();
+
+    function updateCountdown() {
+      const now = Date.now();
+      const distance = target - now;
+
+      if (distance <= 0) {
+        countdown.innerHTML = '<strong>Tournament Started!</strong>';
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (distance / (1000 * 60 * 60)) % 24
+      );
+      const minutes = Math.floor(
+        (distance / (1000 * 60)) % 60
+      );
+      const seconds = Math.floor(
+        (distance / 1000) % 60
+      );
+
+      const dayEl = countdown.querySelector('[data-days]');
+      const hourEl = countdown.querySelector('[data-hours]');
+      const minEl = countdown.querySelector('[data-minutes]');
+      const secEl = countdown.querySelector('[data-seconds]');
+
+      if (dayEl) dayEl.textContent = String(days).padStart(2, '0');
+      if (hourEl) hourEl.textContent = String(hours).padStart(2, '0');
+      if (minEl) minEl.textContent = String(minutes).padStart(2, '0');
+      if (secEl) secEl.textContent = String(seconds).padStart(2, '0');
+
+      if (
+        !dayEl &&
+        !hourEl &&
+        !minEl &&
+        !secEl
+      ) {
+        countdown.textContent =
+          days + 'd ' +
+          hours + 'h ' +
+          minutes + 'm ' +
+          seconds + 's';
+      }
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  }
+
+  /* =========================
+     TEAMS
+  ========================= */
 
   async function renderTeams() {
     const grid = document.getElementById('teamGrid');
@@ -187,16 +232,39 @@ const supabaseClient = window.supabase.createClient(
     grid.innerHTML =
       '<p class="section-sub">Loading APL 4 teams...</p>';
 
+    /*
+      IMPORTANT:
+      We fetch teams and players together.
+      This fixes the problem where View Team
+      opened but players were missing.
+    */
+
     const { data, error } = await supabaseClient
       .from('teams')
-      .select('*')
+      .select(`
+        id,
+        name,
+        captain,
+        vice_captain,
+        logo_url,
+        village_id,
+        players (
+          id,
+          name,
+          role,
+          photo_url
+        )
+      `)
       .order('name');
 
     if (error) {
       console.error('Supabase teams error:', error);
 
       grid.innerHTML =
-        '<p class="section-sub">Unable to load teams. Please try again.</p>';
+        '<p class="section-sub">' +
+        'Unable to load teams. ' +
+        escapeHtml(error.message) +
+        '</p>';
 
       return;
     }
@@ -212,21 +280,15 @@ const supabaseClient = window.supabase.createClient(
     grid.innerHTML = TEAMS.map(function (team) {
       const logoHtml = team.logo_url
         ? '<img src="' +
-          team.logo_url +
+          escapeHtml(team.logo_url) +
           '" alt="' +
-          team.name +
+          escapeHtml(team.name) +
           ' logo">'
-        : initials(team.name);
+        : escapeHtml(initials(team.name));
 
-      const villageName =
-        team.villages && team.villages.name
-          ? team.villages.name
-          : 'Village TBA';
-
-      const playerCount =
-        Array.isArray(team.players)
-          ? team.players.length
-          : 0;
+      const playerCount = Array.isArray(team.players)
+        ? team.players.length
+        : 0;
 
       return (
         '<article class="team-card">' +
@@ -238,15 +300,13 @@ const supabaseClient = window.supabase.createClient(
             '</div>' +
 
             '<div>' +
-
               '<h3 class="team-name">' +
-                team.name +
+                escapeHtml(team.name) +
               '</h3>' +
 
               '<p class="team-village">' +
-                villageName +
+                'APL 4 Team' +
               '</p>' +
-
             '</div>' +
 
           '</div>' +
@@ -254,14 +314,16 @@ const supabaseClient = window.supabase.createClient(
           '<div class="team-meta">' +
 
             '<span>' +
-              'Captain: <strong>' +
-              (team.captain || 'TBA') +
+              'Captain: ' +
+              '<strong>' +
+                escapeHtml(team.captain || 'TBA') +
               '</strong>' +
             '</span>' +
 
             '<span>' +
-              'Players: <strong>' +
-              playerCount +
+              'Players: ' +
+              '<strong>' +
+                playerCount +
               '</strong>' +
             '</span>' +
 
@@ -272,7 +334,7 @@ const supabaseClient = window.supabase.createClient(
             'type="button" ' +
             'data-team-id="' +
             team.id +
-            '">' +
+          '">' +
             'View Team' +
           '</button>' +
 
@@ -280,28 +342,28 @@ const supabaseClient = window.supabase.createClient(
       );
     }).join('');
 
-    /*
-     * View Team buttons
-     */
-
     grid.querySelectorAll('.team-card-btn').forEach(function (button) {
       button.addEventListener('click', function () {
         const teamId = Number(button.dataset.teamId);
+
         openTeam(teamId);
       });
     });
   }
 
-  /* ------------------------------------------------------------------
-     4. TEAM DETAILS
-     ------------------------------------------------------------------ */
+  /* =========================
+     OPEN TEAM
+  ========================= */
 
   function openTeam(teamId) {
     const team = TEAMS.find(function (t) {
       return Number(t.id) === Number(teamId);
     });
 
-    if (!team) return;
+    if (!team) {
+      console.error('Team not found:', teamId);
+      return;
+    }
 
     const players = Array.isArray(team.players)
       ? team.players
@@ -311,21 +373,23 @@ const supabaseClient = window.supabase.createClient(
 
     if (players.length === 0) {
       playerHtml =
-        '<p class="section-sub">Player information coming soon.</p>';
+        '<p class="section-sub">' +
+        'Player information coming soon.' +
+        '</p>';
     } else {
       playerHtml = players.map(function (player, index) {
         const photo = player.photo_url
           ? '<img src="' +
-            player.photo_url +
+            escapeHtml(player.photo_url) +
             '" alt="' +
-            player.name +
+            escapeHtml(player.name) +
             '">'
           : '<span>' +
-            initials(player.name) +
+            escapeHtml(initials(player.name)) +
             '</span>';
 
         const role = player.role
-          ? player.role
+          ? escapeHtml(player.role)
           : '';
 
         return (
@@ -340,12 +404,14 @@ const supabaseClient = window.supabase.createClient(
               '<strong>' +
                 (index + 1) +
                 '. ' +
-                player.name +
+                escapeHtml(player.name) +
               '</strong>' +
 
-              (role
-                ? '<small>' + role + '</small>'
-                : '') +
+              (
+                role
+                  ? '<small>' + role + '</small>'
+                  : ''
+              ) +
 
             '</div>' +
 
@@ -359,6 +425,7 @@ const supabaseClient = window.supabase.createClient(
     overlay.className = 'team-modal';
 
     overlay.innerHTML =
+
       '<div class="team-modal-backdrop"></div>' +
 
       '<div class="team-modal-content">' +
@@ -373,29 +440,27 @@ const supabaseClient = window.supabase.createClient(
         '<div class="team-modal-header">' +
 
           '<div class="team-modal-logo">' +
+
             (
               team.logo_url
                 ? '<img src="' +
-                  team.logo_url +
+                  escapeHtml(team.logo_url) +
                   '" alt="' +
-                  team.name +
+                  escapeHtml(team.name) +
                   ' logo">'
-                : initials(team.name)
+                : escapeHtml(initials(team.name))
             ) +
+
           '</div>' +
 
           '<div>' +
 
             '<h2>' +
-              team.name +
+              escapeHtml(team.name) +
             '</h2>' +
 
             '<p>' +
-              (
-                team.villages
-                  ? team.villages.name
-                  : 'Village TBA'
-              ) +
+              'APL 4 Team' +
             '</p>' +
 
           '</div>' +
@@ -407,14 +472,14 @@ const supabaseClient = window.supabase.createClient(
           '<div>' +
             '<span>Captain</span>' +
             '<strong>' +
-              (team.captain || 'TBA') +
+              escapeHtml(team.captain || 'TBA') +
             '</strong>' +
           '</div>' +
 
           '<div>' +
             '<span>Vice Captain</span>' +
             '<strong>' +
-              (team.vice_captain || 'TBA') +
+              escapeHtml(team.vice_captain || 'TBA') +
             '</strong>' +
           '</div>' +
 
@@ -445,638 +510,349 @@ const supabaseClient = window.supabase.createClient(
     function closeTeam() {
       overlay.remove();
       document.body.style.overflow = '';
+
+      document.removeEventListener(
+        'keydown',
+        escHandler
+      );
     }
 
-    closeButton.addEventListener('click', closeTeam);
-    backdrop.addEventListener('click', closeTeam);
-
-    document.addEventListener('keydown', function escHandler(e) {
+    function escHandler(e) {
       if (e.key === 'Escape') {
         closeTeam();
-        document.removeEventListener(
-          'keydown',
-          escHandler
-        );
       }
-    });
+    }
+
+    if (closeButton) {
+      closeButton.addEventListener(
+        'click',
+        closeTeam
+      );
+    }
+
+    if (backdrop) {
+      backdrop.addEventListener(
+        'click',
+        closeTeam
+      );
+    }
+
+    document.addEventListener(
+      'keydown',
+      escHandler
+    );
   }
 
-  /* ------------------------------------------------------------------
-     5. MATCHES
-     ------------------------------------------------------------------ */
-
-  function formatMatchDate(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
-
-    return {
-      day: d.getDate(),
-      month: d.toLocaleString('en-US', {
-        month: 'short'
-      })
-    };
-  }
+  /* =========================
+     MATCHES
+  ========================= */
 
   function renderMatches(filter) {
-    const list =
-      document.getElementById('matchList');
+    const container =
+      document.getElementById('matchesGrid') ||
+      document.getElementById('matchGrid');
 
-    if (!list) return;
+    if (!container) return;
 
-    const filtered = MATCHES.filter(function (m) {
-      return m.status === filter;
+    const filtered = MATCHES.filter(function (match) {
+      return !filter || match.status === filter;
     });
 
     if (filtered.length === 0) {
-      list.innerHTML =
-        '<p class="section-sub">No ' +
-        filter +
-        ' matches to show yet.</p>';
-
+      container.innerHTML =
+        '<p class="section-sub">No matches found.</p>';
       return;
     }
 
-    list.innerHTML = filtered.map(function (m) {
-      const dt = formatMatchDate(m.date);
-
-      const statusHtml =
-        m.status === 'upcoming'
-          ? '<span class="match-status upcoming">' +
-            m.time +
-            '</span>'
-          : '<span class="match-status completed match-score">' +
-            (m.score || 'Result TBA') +
-            '</span>';
-
+    container.innerHTML = filtered.map(function (match) {
       return (
-        '<div class="match-card">' +
+        '<article class="match-card">' +
+
+          '<div class="match-status">' +
+            escapeHtml(match.status) +
+          '</div>' +
 
           '<div class="match-date">' +
-            '<span class="match-date-day">' +
-              dt.day +
-            '</span>' +
-
-            '<span class="match-date-month">' +
-              dt.month +
-            '</span>' +
+            escapeHtml(match.date) +
           '</div>' +
 
-          '<div class="match-teams-wrap">' +
+          '<div class="match-teams">' +
 
-            '<div class="match-teams">' +
-              '<span>' + m.teamA + '</span>' +
-              '<span class="match-vs">vs</span>' +
-              '<span>' + m.teamB + '</span>' +
-            '</div>' +
+            '<strong>' +
+              escapeHtml(match.teamA) +
+            '</strong>' +
 
-            '<div class="match-info">' +
-              m.venue +
-            '</div>' +
+            '<span>VS</span>' +
+
+            '<strong>' +
+              escapeHtml(match.teamB) +
+            '</strong>' +
 
           '</div>' +
 
-          statusHtml +
+          '<div class="match-info">' +
+            escapeHtml(match.time) +
+            ' • ' +
+            escapeHtml(match.venue) +
+          '</div>' +
+
+        '</article>'
+      );
+    }).join('');
+  }
+
+  function initTabs() {
+    const tabs = document.querySelectorAll(
+      '[data-match-tab], .match-tab'
+    );
+
+    if (!tabs.length) return;
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (item) {
+          item.classList.remove('active');
+        });
+
+        tab.classList.add('active');
+
+        const filter =
+          tab.dataset.matchTab ||
+          tab.dataset.filter ||
+          tab.textContent.trim().toLowerCase();
+
+        if (
+          filter === 'all' ||
+          filter === 'matches'
+        ) {
+          renderMatches();
+        } else {
+          renderMatches(filter);
+        }
+      });
+    });
+  }
+
+  /* =========================
+     LIVE SCORE
+  ========================= */
+
+  function renderScorecard() {
+    const container =
+      document.getElementById('scorecard') ||
+      document.getElementById('liveScore');
+
+    if (!container) return;
+
+    container.innerHTML =
+      '<div class="scorecard-inner">' +
+
+        '<div class="score-team">' +
+          escapeHtml(LIVE_SCORE_DEMO.teamA) +
+          '<strong>' +
+            LIVE_SCORE_DEMO.runsA +
+            '/' +
+            LIVE_SCORE_DEMO.wicketsA +
+          '</strong>' +
+          '<small>' +
+            LIVE_SCORE_DEMO.oversA +
+            ' overs' +
+          '</small>' +
+        '</div>' +
+
+        '<div class="score-vs">VS</div>' +
+
+        '<div class="score-team">' +
+          escapeHtml(LIVE_SCORE_DEMO.teamB) +
+          '<strong>' +
+            LIVE_SCORE_DEMO.runsB +
+            '/' +
+            LIVE_SCORE_DEMO.wicketsB +
+          '</strong>' +
+          '<small>' +
+            LIVE_SCORE_DEMO.oversB +
+            ' overs' +
+          '</small>' +
+        '</div>' +
+
+        '<div class="score-status">' +
+          escapeHtml(LIVE_SCORE_DEMO.status) +
+        '</div>' +
+
+      '</div>';
+  }
+
+  /* =========================
+     GALLERY
+  ========================= */
+
+  function renderGallery() {
+    const gallery =
+      document.getElementById('galleryGrid') ||
+      document.getElementById('gallery');
+
+    if (!gallery) return;
+
+    gallery.innerHTML = GALLERY.map(function (image, index) {
+      return (
+        '<div class="gallery-item">' +
+
+          '<img ' +
+            'src="' +
+            escapeHtml(image) +
+            '" ' +
+            'alt="APL 4 Gallery ' +
+            (index + 1) +
+            '" ' +
+            'data-lightbox="' +
+            escapeHtml(image) +
+          '">' +
 
         '</div>'
       );
     }).join('');
   }
 
-  /* ------------------------------------------------------------------
-     6. SCORECARD
-     ------------------------------------------------------------------ */
+  /* =========================
+     LIGHTBOX
+  ========================= */
 
-  function renderScorecard() {
-    const el =
-      document.getElementById('scorecard');
+  function initLightbox() {
+    document.addEventListener('click', function (event) {
+      const image =
+        event.target.closest(
+          '[data-lightbox]'
+        );
 
-    if (!el) return;
+      if (!image) return;
 
-    const d = LIVE_SCORE_DEMO;
+      const src =
+        image.dataset.lightbox ||
+        image.src;
 
-    el.innerHTML =
-      '<div class="scorecard-teams">' +
+      const lightbox =
+        document.createElement('div');
 
-        '<div class="scorecard-team">' +
+      lightbox.className =
+        'image-lightbox';
 
-          '<div class="scorecard-team-name">' +
-            d.teamA.name +
-          '</div>' +
+      lightbox.innerHTML =
+        '<div class="image-lightbox-backdrop"></div>' +
 
-          '<div class="scorecard-team-score">' +
-            d.teamA.score +
-          '</div>' +
+        '<div class="image-lightbox-content">' +
 
-          '<div class="scorecard-team-overs">' +
-            d.teamA.overs +
-          '</div>' +
+          '<button ' +
+            'class="image-lightbox-close" ' +
+            'type="button">' +
+            '×' +
+          '</button>' +
 
-        '</div>' +
+          '<img src="' +
+            escapeHtml(src) +
+            '" alt="APL 4 image">' +
 
-        '<div class="scorecard-vs">VS</div>' +
+        '</div>';
 
-        '<div class="scorecard-team">' +
+      document.body.appendChild(lightbox);
 
-          '<div class="scorecard-team-name">' +
-            d.teamB.name +
-          '</div>' +
+      function closeLightbox() {
+        lightbox.remove();
+        document.body.style.overflow = '';
+      }
 
-          '<div class="scorecard-team-score">' +
-            d.teamB.score +
-          '</div>' +
+      document.body.style.overflow = 'hidden';
 
-          '<div class="scorecard-team-overs">' +
-            d.teamB.overs +
-          '</div>' +
+      const closeButton =
+        lightbox.querySelector(
+          '.image-lightbox-close'
+        );
 
-        '</div>' +
+      const backdrop =
+        lightbox.querySelector(
+          '.image-lightbox-backdrop'
+        );
 
-      '</div>' +
+      if (closeButton) {
+        closeButton.addEventListener(
+          'click',
+          closeLightbox
+        );
+      }
 
-      '<p class="scorecard-status">' +
-        d.status +
-      '</p>';
+      if (backdrop) {
+        backdrop.addEventListener(
+          'click',
+          closeLightbox
+        );
+      }
+    });
   }
 
-  /* ------------------------------------------------------------------
-     7. GALLERY
-     ------------------------------------------------------------------ */
-
-  function renderGallery() {
-    const grid =
-      document.getElementById('galleryGrid');
-
-    if (!grid) return;
-
-    grid.innerHTML = GALLERY.map(function (item, i) {
-      return (
-        '<button ' +
-          'class="gallery-item" ' +
-          'type="button" ' +
-          'data-index="' +
-          i +
-          '" ' +
-          'aria-label="Open photo: ' +
-          item.caption +
-          '">' +
-
-          '<img ' +
-            'src="' +
-            item.src +
-            '" ' +
-            'alt="' +
-            item.alt +
-            '" ' +
-            'loading="lazy" ' +
-            'onerror="this.closest(\'.gallery-item\').classList.add(\'img-missing\')">' +
-
-          '<span class="gallery-caption">' +
-            item.caption +
-          '</span>' +
-
-        '</button>'
-      );
-    }).join('');
-
-    grid
-      .querySelectorAll('.gallery-item')
-      .forEach(function (btn) {
-
-        btn.addEventListener('click', function () {
-          openLightbox(
-            Number(btn.dataset.index)
-          );
-        });
-
-      });
-  }
-
-  /* ------------------------------------------------------------------
-     8. HISTORY
-     ------------------------------------------------------------------ */
+  /* =========================
+     HISTORY
+  ========================= */
 
   function renderHistory() {
-    const grid =
-      document.getElementById('historyGrid');
+    const container =
+      document.getElementById('historyGrid') ||
+      document.getElementById('history');
 
-    if (!grid) return;
+    if (!container) return;
 
-    grid.innerHTML = HISTORY.map(function (h) {
+    container.innerHTML = HISTORY.map(function (item) {
       return (
         '<article class="history-card">' +
 
-          '<div class="history-year">' +
-            h.year +
-          '</div>' +
+          '<h3>' +
+            escapeHtml(item.year) +
+          '</h3>' +
 
-          '<div class="history-edition">' +
-            h.edition +
-          '</div>' +
+          '<p>' +
+            '<strong>Winner:</strong> ' +
+            escapeHtml(item.winner) +
+          '</p>' +
 
-          '<div class="history-row">' +
-            '<span>Winner</span>' +
-            '<span>' + h.winner + '</span>' +
-          '</div>' +
-
-          '<div class="history-row">' +
-            '<span>Runner-up</span>' +
-            '<span>' + h.runnerUp + '</span>' +
-          '</div>' +
-
-          '<div class="history-row">' +
-            '<span>Result</span>' +
-            '<span>' + h.result + '</span>' +
-          '</div>' +
-
-          '<div class="history-row">' +
-            '<span>Winning captain</span>' +
-            '<span>' + h.captain + '</span>' +
-          '</div>' +
+          '<p>' +
+            '<strong>Runner-up:</strong> ' +
+            escapeHtml(item.runner) +
+          '</p>' +
 
         '</article>'
       );
     }).join('');
   }
 
-  /* ------------------------------------------------------------------
-     9. VILLAGES
-     ------------------------------------------------------------------ */
+  /* =========================
+     VILLAGES
+  ========================= */
 
   function renderVillages() {
-    const grid =
-      document.getElementById('villageGrid');
+    const container =
+      document.getElementById('villagesGrid') ||
+      document.getElementById('villages');
 
-    if (!grid) return;
+    if (!container) return;
 
-    grid.innerHTML = VILLAGES.map(function (v) {
-
-      const photoHtml = v.photo
-        ? '<img src="' +
-          v.photo +
-          '" alt="' +
-          v.name +
-          '">'
-        : 'Photo coming soon';
-
+    container.innerHTML = VILLAGES.map(function (village) {
       return (
         '<article class="village-card">' +
 
-          '<div class="village-photo">' +
-            photoHtml +
+          '<div class="village-icon">' +
+            escapeHtml(initials(village)) +
           '</div>' +
 
-          '<div class="village-body">' +
-
-            '<h3 class="village-name">' +
-              v.name +
-            '</h3>' +
-
-            '<p class="village-teams">' +
-              v.teams +
-              ' team' +
-              (v.teams > 1 ? 's' : '') +
-            '</p>' +
-
-            '<p class="village-desc">' +
-              v.description +
-            '</p>' +
-
-          '</div>' +
+          '<h3>' +
+            escapeHtml(village) +
+          '</h3>' +
 
         '</article>'
       );
     }).join('');
   }
 
-  /* ------------------------------------------------------------------
-     10. MOBILE NAV
-     ------------------------------------------------------------------ */
-
-  function initNav() {
-    const toggle =
-      document.getElementById('navToggle');
-
-    const menu =
-      document.getElementById('navMenu');
-
-    if (!toggle || !menu) return;
-
-    toggle.addEventListener('click', function () {
-
-      const isOpen =
-        menu.classList.toggle('is-open');
-
-      toggle.setAttribute(
-        'aria-expanded',
-        String(isOpen)
-      );
-
-      toggle.setAttribute(
-        'aria-label',
-        isOpen
-          ? 'Close menu'
-          : 'Open menu'
-      );
-    });
-
-    menu
-      .querySelectorAll('.nav-link')
-      .forEach(function (link) {
-
-        link.addEventListener('click', function () {
-
-          menu.classList.remove('is-open');
-
-          toggle.setAttribute(
-            'aria-expanded',
-            'false'
-          );
-
-          toggle.setAttribute(
-            'aria-label',
-            'Open menu'
-          );
-
-        });
-
-      });
-  }
-
-  /* ------------------------------------------------------------------
-     11. MATCH TABS
-     ------------------------------------------------------------------ */
-
-  function initTabs() {
-    const tabs =
-      document.querySelectorAll('.tab');
-
-    if (!tabs.length) return;
-
-    tabs.forEach(function (tab) {
-
-      tab.addEventListener('click', function () {
-
-        tabs.forEach(function (t) {
-          t.classList.remove('is-active');
-
-          t.setAttribute(
-            'aria-selected',
-            'false'
-          );
-        });
-
-        tab.classList.add('is-active');
-
-        tab.setAttribute(
-          'aria-selected',
-          'true'
-        );
-
-        renderMatches(
-          tab.dataset.filter
-        );
-      });
-
-    });
-  }
-
-  /* ------------------------------------------------------------------
-     12. LIGHTBOX
-     ------------------------------------------------------------------ */
-
-  let currentLightboxIndex = 0;
-
-  function openLightbox(index) {
-    currentLightboxIndex = index;
-
-    const item = GALLERY[index];
-
-    const lightbox =
-      document.getElementById('lightbox');
-
-    const img =
-      document.getElementById('lightboxImg');
-
-    const caption =
-      document.getElementById('lightboxCaption');
-
-    if (!lightbox || !img || !caption) return;
-
-    img.src = item.src;
-    img.alt = item.alt;
-
-    caption.textContent =
-      item.caption;
-
-    lightbox.classList.add('is-open');
-
-    lightbox.setAttribute(
-      'aria-hidden',
-      'false'
-    );
-
-    document.body.style.overflow =
-      'hidden';
-  }
-
-  function closeLightbox() {
-    const lightbox =
-      document.getElementById('lightbox');
-
-    if (!lightbox) return;
-
-    lightbox.classList.remove(
-      'is-open'
-    );
-
-    lightbox.setAttribute(
-      'aria-hidden',
-      'true'
-    );
-
-    document.body.style.overflow = '';
-  }
-
-  function initLightbox() {
-    const closeBtn =
-      document.getElementById(
-        'lightboxClose'
-      );
-
-    const lightbox =
-      document.getElementById(
-        'lightbox'
-      );
-
-    if (closeBtn) {
-      closeBtn.addEventListener(
-        'click',
-        closeLightbox
-      );
-    }
-
-    if (lightbox) {
-
-      lightbox.addEventListener(
-        'click',
-        function (e) {
-
-          if (e.target === lightbox) {
-            closeLightbox();
-          }
-
-        }
-      );
-
-    }
-
-    document.addEventListener(
-      'keydown',
-      function (e) {
-
-        if (e.key === 'Escape') {
-          closeLightbox();
-        }
-
-      }
-    );
-  }
-
-  /* ------------------------------------------------------------------
-     13. COUNTDOWN
-     ------------------------------------------------------------------ */
-
-  function initCountdown() {
-
-    const target =
-      new Date(
-        '2026-11-14T07:00:00+05:30'
-      ).getTime();
-
-    const closing =
-      new Date(
-        '2026-11-18T15:00:00+05:30'
-      ).getTime();
-
-    const els = {
-
-      days:
-        document.getElementById(
-          'cd-days'
-        ),
-
-      hours:
-        document.getElementById(
-          'cd-hours'
-        ),
-
-      minutes:
-        document.getElementById(
-          'cd-minutes'
-        ),
-
-      seconds:
-        document.getElementById(
-          'cd-seconds'
-        ),
-
-      message:
-        document.getElementById(
-          'countdownMessage'
-        ),
-
-      grid:
-        document.getElementById(
-          'countdownGrid'
-        )
-
-    };
-
-    if (!els.days) return;
-
-    function pad(n) {
-      return String(n).padStart(2, '0');
-    }
-
-    function tick() {
-
-      const now =
-        Date.now();
-
-      const diff =
-        target - now;
-
-      if (diff <= 0) {
-
-        if (now < closing) {
-
-          els.message.textContent =
-            'APL 4 is live right now';
-
-        } else {
-
-          els.message.textContent =
-            'APL 4 has concluded — see you next edition';
-
-        }
-
-        if (els.grid) {
-          els.grid.style.display =
-            'none';
-        }
-
-        clearInterval(timer);
-
-        return;
-      }
-
-      const days =
-        Math.floor(
-          diff / 86400000
-        );
-
-      const hours =
-        Math.floor(
-          (diff % 86400000) /
-          3600000
-        );
-
-      const minutes =
-        Math.floor(
-          (diff % 3600000) /
-          60000
-        );
-
-      const seconds =
-        Math.floor(
-          (diff % 60000) /
-          1000
-        );
-
-      els.days.textContent =
-        pad(days);
-
-      els.hours.textContent =
-        pad(hours);
-
-      els.minutes.textContent =
-        pad(minutes);
-
-      els.seconds.textContent =
-        pad(seconds);
-    }
-
-    tick();
-
-    const timer =
-      setInterval(
-        tick,
-        1000
-      );
-  }
-
-  /* ------------------------------------------------------------------
-     14. INIT
-     ------------------------------------------------------------------ */
+  /* =========================
+     START EVERYTHING
+  ========================= */
 
   document.addEventListener(
     'DOMContentLoaded',
@@ -1088,9 +864,7 @@ const supabaseClient = window.supabase.createClient(
 
       renderTeams();
 
-      renderMatches(
-        'upcoming'
-      );
+      renderMatches('upcoming');
 
       initTabs();
 
