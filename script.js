@@ -224,202 +224,377 @@ const supabaseClient = window.supabase.createClient(
      TEAMS
   ========================= */
 
-  async function renderTeams() {
-    const grid = document.getElementById('teamGrid');
+async function renderTeams() {
+  const grid = document.getElementById('teamGrid');
 
-    if (!grid) return;
+  if (!grid) return;
+
+  grid.innerHTML =
+    '<p class="section-sub">Loading APL 4 teams...</p>';
+
+  const { data, error } = await supabaseClient
+    .from('teams')
+    .select(`
+      id,
+      name,
+      captain,
+      vice_captain,
+      logo_url,
+      village_id
+    `)
+    .order('name');
+
+  if (error) {
+    console.error('Supabase teams error:', error);
 
     grid.innerHTML =
-      '<p class="section-sub">Loading APL 4 teams...</p>';
+      '<p class="section-sub">Unable to load teams: ' +
+      escapeHtml(error.message) +
+      '</p>';
 
-    /*
-      IMPORTANT:
-      We fetch teams and players together.
-      This fixes the problem where View Team
-      opened but players were missing.
-    */
-
-    const { data, error } = await supabaseClient
-      .from('teams')
-      .select(`
-        id,
-        name,
-        captain,
-        vice_captain,
-        logo_url,
-        village_id,
-        players (
-          id,
-          name,
-          role,
-          photo_url
-        )
-      `)
-      .order('name');
-
-    if (error) {
-      console.error('Supabase teams error:', error);
-
-      grid.innerHTML =
-        '<p class="section-sub">' +
-        'Unable to load teams. ' +
-        escapeHtml(error.message) +
-        '</p>';
-
-      return;
-    }
-
-    TEAMS = data || [];
-
-    if (TEAMS.length === 0) {
-      grid.innerHTML =
-        '<p class="section-sub">No teams found.</p>';
-      return;
-    }
-
-    grid.innerHTML = TEAMS.map(function (team) {
-      const logoHtml = team.logo_url
-        ? '<img src="' +
-          escapeHtml(team.logo_url) +
-          '" alt="' +
-          escapeHtml(team.name) +
-          ' logo">'
-        : escapeHtml(initials(team.name));
-
-      const playerCount = Array.isArray(team.players)
-        ? team.players.length
-        : 0;
-
-      return (
-        '<article class="team-card">' +
-
-          '<div class="team-card-top">' +
-
-            '<div class="team-logo">' +
-              logoHtml +
-            '</div>' +
-
-            '<div>' +
-              '<h3 class="team-name">' +
-                escapeHtml(team.name) +
-              '</h3>' +
-
-              '<p class="team-village">' +
-                'APL 4 Team' +
-              '</p>' +
-            '</div>' +
-
-          '</div>' +
-
-          '<div class="team-meta">' +
-
-            '<span>' +
-              'Captain: ' +
-              '<strong>' +
-                escapeHtml(team.captain || 'TBA') +
-              '</strong>' +
-            '</span>' +
-
-            '<span>' +
-              'Players: ' +
-              '<strong>' +
-                playerCount +
-              '</strong>' +
-            '</span>' +
-
-          '</div>' +
-
-          '<button ' +
-            'class="team-card-btn" ' +
-            'type="button" ' +
-            'data-team-id="' +
-            team.id +
-          '">' +
-            'View Team' +
-          '</button>' +
-
-        '</article>'
-      );
-    }).join('');
-
-    grid.querySelectorAll('.team-card-btn').forEach(function (button) {
-      button.addEventListener('click', function () {
-        const teamId = Number(button.dataset.teamId);
-
-        openTeam(teamId);
-      });
-    });
+    return;
   }
 
+  TEAMS = data || [];
+
+  if (TEAMS.length === 0) {
+    grid.innerHTML =
+      '<p class="section-sub">No teams found.</p>';
+    return;
+  }
+
+  grid.innerHTML = TEAMS.map(function (team) {
+
+    const logoHtml = team.logo_url
+      ? '<img src="' +
+        escapeHtml(team.logo_url) +
+        '" alt="' +
+        escapeHtml(team.name) +
+        ' logo">'
+      : escapeHtml(initials(team.name));
+
+    return (
+      '<article class="team-card">' +
+
+        '<div class="team-card-top">' +
+
+          '<div class="team-logo">' +
+            logoHtml +
+          '</div>' +
+
+          '<div>' +
+            '<h3 class="team-name">' +
+              escapeHtml(team.name) +
+            '</h3>' +
+
+            '<p class="team-village">' +
+              'APL 4 Team' +
+            '</p>' +
+          '</div>' +
+
+        '</div>' +
+
+        '<div class="team-meta">' +
+
+          '<span>' +
+            'Captain: ' +
+            '<strong>' +
+              escapeHtml(team.captain || 'TBA') +
+            '</strong>' +
+          '</span>' +
+
+          '<span>' +
+            'APL 4 Squad' +
+          '</span>' +
+
+        '</div>' +
+
+        '<button ' +
+          'class="team-card-btn" ' +
+          'type="button" ' +
+          'data-team-id="' +
+          team.id +
+        '">' +
+          'View Team' +
+        '</button>' +
+
+      '</article>'
+    );
+
+  }).join('');
+
+  grid.querySelectorAll('.team-card-btn').forEach(function (button) {
+
+    button.addEventListener('click', function () {
+
+      const teamId = Number(button.dataset.teamId);
+
+      openTeam(teamId);
+
+    });
+
+  });
+}
   /* =========================
      OPEN TEAM
   ========================= */
 
-  function openTeam(teamId) {
-    const team = TEAMS.find(function (t) {
-      return Number(t.id) === Number(teamId);
-    });
+  async function openTeam(teamId) {
 
-    if (!team) {
-      console.error('Team not found:', teamId);
-      return;
-    }
+  const team = TEAMS.find(function (t) {
+    return Number(t.id) === Number(teamId);
+  });
 
-    const players = Array.isArray(team.players)
-      ? team.players
-      : [];
+  if (!team) {
+    console.error('Team not found:', teamId);
+    return;
+  }
 
-    let playerHtml = '';
+  /*
+    Create the popup immediately.
+    Players are loaded AFTER the popup appears.
+    This prevents the page from freezing.
+  */
 
-    if (players.length === 0) {
-      playerHtml =
+  const overlay = document.createElement('div');
+
+  overlay.className = 'team-modal';
+
+  overlay.innerHTML =
+
+    '<div class="team-modal-backdrop"></div>' +
+
+    '<div class="team-modal-content">' +
+
+      '<button ' +
+        'class="team-modal-close" ' +
+        'type="button" ' +
+        'aria-label="Close">' +
+        '×' +
+      '</button>' +
+
+      '<div class="team-modal-header">' +
+
+        '<div class="team-modal-logo">' +
+
+          (
+            team.logo_url
+              ? '<img src="' +
+                escapeHtml(team.logo_url) +
+                '" alt="' +
+                escapeHtml(team.name) +
+                ' logo">'
+              : escapeHtml(initials(team.name))
+          ) +
+
+        '</div>' +
+
+        '<div>' +
+
+          '<h2>' +
+            escapeHtml(team.name) +
+          '</h2>' +
+
+          '<p>APL 4 Team</p>' +
+
+        '</div>' +
+
+      '</div>' +
+
+      '<div class="team-leaders">' +
+
+        '<div>' +
+          '<span>Captain</span>' +
+          '<strong>' +
+            escapeHtml(team.captain || 'TBA') +
+          '</strong>' +
+        '</div>' +
+
+        '<div>' +
+          '<span>Vice Captain</span>' +
+          '<strong>' +
+            escapeHtml(team.vice_captain || 'TBA') +
+          '</strong>' +
+        '</div>' +
+
+      '</div>' +
+
+      '<h3 class="team-modal-title">' +
+        'Squad' +
+      '</h3>' +
+
+      '<div class="team-players">' +
+
         '<p class="section-sub">' +
-        'Player information coming soon.' +
-        '</p>';
-    } else {
-      playerHtml = players.map(function (player, index) {
-        const photo = player.photo_url
-          ? '<img src="' +
-            escapeHtml(player.photo_url) +
-            '" alt="' +
-            escapeHtml(player.name) +
-            '">'
-          : '<span>' +
-            escapeHtml(initials(player.name)) +
-            '</span>';
+          'Loading players...' +
+        '</p>' +
 
-        const role = player.role
-          ? escapeHtml(player.role)
-          : '';
+      '</div>' +
 
-        return (
-          '<div class="team-player">' +
+    '</div>';
 
-            '<div class="team-player-photo">' +
-              photo +
-            '</div>' +
+  document.body.appendChild(overlay);
 
-            '<div class="team-player-info">' +
+  document.body.style.overflow = 'hidden';
 
-              '<strong>' +
-                (index + 1) +
-                '. ' +
-                escapeHtml(player.name) +
-              '</strong>' +
+  const closeButton =
+    overlay.querySelector('.team-modal-close');
 
-              (
-                role
-                  ? '<small>' + role + '</small>'
-                  : ''
-              ) +
+  const backdrop =
+    overlay.querySelector('.team-modal-backdrop');
 
-            '</div>' +
+  const playersContainer =
+    overlay.querySelector('.team-players');
 
-          '</div>'
-        );
-      }).join('');
+  function closeTeam() {
+
+    overlay.remove();
+
+    document.body.style.overflow = '';
+
+    document.removeEventListener(
+      'keydown',
+      escHandler
+    );
+  }
+
+  function escHandler(e) {
+
+    if (e.key === 'Escape') {
+      closeTeam();
     }
 
+  }
+
+  closeButton.addEventListener(
+    'click',
+    closeTeam
+  );
+
+  backdrop.addEventListener(
+    'click',
+    closeTeam
+  );
+
+  document.addEventListener(
+    'keydown',
+    escHandler
+  );
+
+  /*
+    NOW fetch only the players belonging
+    to the selected team.
+  */
+
+  const { data: players, error } = await supabaseClient
+
+    .from('players')
+
+    .select(
+      'id, name, role, photo_url'
+    )
+
+    .eq('team_id', teamId)
+
+    .order('id');
+
+  if (error) {
+
+    console.error(
+      'Supabase players error:',
+      error
+    );
+
+    playersContainer.innerHTML =
+      '<p class="section-sub">' +
+      'Unable to load players.<br>' +
+      escapeHtml(error.message) +
+      '</p>';
+
+    return;
+  }
+
+  const squad = players || [];
+
+  /*
+    Update squad count.
+  */
+
+  const title =
+    overlay.querySelector('.team-modal-title');
+
+  if (title) {
+
+    title.textContent =
+      'Squad • ' +
+      squad.length +
+      ' Players';
+
+  }
+
+  if (squad.length === 0) {
+
+    playersContainer.innerHTML =
+      '<p class="section-sub">' +
+      'No players found for this team.' +
+      '</p>';
+
+    return;
+  }
+
+  /*
+    Render players.
+  */
+
+  playersContainer.innerHTML =
+    squad.map(function (player, index) {
+
+      const photo = player.photo_url
+
+        ? '<img src="' +
+          escapeHtml(player.photo_url) +
+          '" alt="' +
+          escapeHtml(player.name) +
+          '">'
+
+        : '<span>' +
+          escapeHtml(
+            initials(player.name)
+          ) +
+          '</span>';
+
+      return (
+
+        '<div class="team-player">' +
+
+          '<div class="team-player-photo">' +
+            photo +
+          '</div>' +
+
+          '<div class="team-player-info">' +
+
+            '<strong>' +
+              (index + 1) +
+              '. ' +
+              escapeHtml(player.name) +
+            '</strong>' +
+
+            (
+              player.role
+                ? '<small>' +
+                  escapeHtml(player.role) +
+                  '</small>'
+                : ''
+            ) +
+
+          '</div>' +
+
+        '</div>'
+
+      );
+
+    }).join('');
+    }
     const overlay = document.createElement('div');
 
     overlay.className = 'team-modal';
