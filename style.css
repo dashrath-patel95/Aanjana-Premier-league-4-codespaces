@@ -175,8 +175,15 @@ button { font-family: inherit; cursor: pointer; }
 
 .brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
+}
+
+.brand-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 .brand-mark {
   font-family: var(--font-display);
