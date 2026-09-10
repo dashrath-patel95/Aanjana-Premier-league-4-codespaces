@@ -58,12 +58,12 @@ const supabaseClient = window.supabase.createClient(
   };
 
   const GALLERY = [
-    'assets/gallery-1.jpg',
-    'assets/gallery-2.jpg',
-    'assets/gallery-3.jpg',
-    'assets/gallery-4.jpg',
-    'assets/gallery-5.jpg',
-    'assets/gallery-6.jpg'
+    'Asset/gallery-1.jpg',
+    'Asset/gallery-2.jpg',
+    'Asset/gallery-3.jpg',
+    'Asset/gallery-4.jpg',
+    'Asset/gallery-5.jpg',
+    'Asset/gallery-6.jpg'
   ];
 
   const HISTORY = [
